@@ -14,7 +14,7 @@ using anab::MVADescription;
 
 class FilterDecoder : public DecoderToolBase {
 private:
-  const art::InputTag fHitLabel;
+  const art::InputTag hitInput;
 
 public:
   /**
@@ -59,7 +59,7 @@ public:
 
 FilterDecoder::FilterDecoder(const fhicl::ParameterSet& p)
   : DecoderToolBase{p}
-  , fHitLabel(p.get<art::InputTag>("HitLabel", "cluster3DCryoE")) {}
+  , hitInput(p.get<art::InputTag>("hitInput", "cluster3DCryoE")) {}
 
 void FilterDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>>& idsmap)
 {
@@ -80,7 +80,7 @@ void FilterDecoder::writeToEvent(art::Event& e,
                                  const vector<NuGraphOutput>& infer_output)
 {
   //
-  art::ValidHandle<std::vector<recob::Hit>> hitsHandle = e.getValidHandle<std::vector<recob::Hit>>(fHitLabel);
+  art::ValidHandle<std::vector<recob::Hit>> hitsHandle = e.getValidHandle<std::vector<recob::Hit>>(hitInput);
   auto outputFeatureHitAssns = std::make_unique<art::Assns<FeatureVector<1>, recob::Hit>>();
   size_t size = 0;
   for (auto& v : idsmap)
@@ -90,12 +90,14 @@ void FilterDecoder::writeToEvent(art::Event& e,
   art::PtrMaker<FeatureVector<1>> fvPtrMaker{e, instancename};
 
   for (size_t p = 0; p < planes.size(); p++) {
-    //
-    std::cout << "All ids of plane[" << p << "]:\n";
-    for (size_t id : idsmap[p]) {
-      std::cout << id << ' ';
+    if (debug) {
+      std::cout << "All ids of plane[" << p << "]:\n";
+      for (size_t id : idsmap[p]) {
+        std::cout << id << ' ';
+      }
+      std::cout << '\n';
     }
-    std::cout << '\n';
+    
     const std::vector<float>* x_filter_data = 0;
     for (auto& io : infer_output) {
       if (io.output_name == outputname + planes[p]) x_filter_data = &io.output_vec;
@@ -117,7 +119,7 @@ void FilterDecoder::writeToEvent(art::Event& e,
       filtcol->emplace_back(FeatureVector<1>(input));
       const art::Ptr<FeatureVector<1>> fvPtr = fvPtrMaker(filtcol->size()-1);
       const art::Ptr<recob::Hit> hitPtr(hitsHandle, idx);
-      std::cout << "Associating FilterVector #" << fvPtr.key() << " with hit #" << hitPtr.key() << '\n';
+      if (debug) std::cout << "Associating FilterVector #" << fvPtr.key() << " with hit #" << hitPtr.key() << '\n';
       outputFeatureHitAssns->addSingle(fvPtr, hitPtr);
     }
   }

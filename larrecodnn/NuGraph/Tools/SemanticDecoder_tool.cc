@@ -58,20 +58,18 @@ public:
 private:
   std::vector<std::string> categories;
   art::InputTag hitInput;
-  art::InputTag fHitLabel;
 };
 
 SemanticDecoder::SemanticDecoder(const fhicl::ParameterSet& p)
   : DecoderToolBase(p)
   , categories{p.get<std::vector<std::string>>("categories")}
-  , hitInput{p.get<art::InputTag>("hitInput")}
-  , fHitLabel{p.get<art::InputTag>("HitLabel", "cluster3DCryoE")}
+  , hitInput{p.get<art::InputTag>("hitInput", "cluster3DCryoE")}
 {}
 
 void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>>& idsmap)
 {
   //
-  auto semtdes = std::make_unique<MVADescription<5>>(fHitLabel.label(), instancename, categories);
+  auto semtdes = std::make_unique<MVADescription<5>>(hitInput.label(), instancename, categories);
   auto outputFeatureHitAssns = std::make_unique<art::Assns<FeatureVector<5>, recob::Hit>>();
   e.put(std::move(semtdes), instancename);
   //
@@ -91,11 +89,11 @@ void SemanticDecoder::writeToEvent(art::Event& e,
                                    const vector<NuGraphOutput>& infer_output)
 {
   //
-  auto semtdes = std::make_unique<MVADescription<5>>(fHitLabel.label(), instancename, categories);
+  auto semtdes = std::make_unique<MVADescription<5>>(hitInput.label(), instancename, categories);
   e.put(std::move(semtdes), instancename);
   auto outputFeatureHitAssns = std::make_unique<art::Assns<FeatureVector<5>, recob::Hit>>();
   art::PtrMaker<FeatureVector<5>> fvPtrMaker{e, instancename};
-  art::ValidHandle<std::vector<recob::Hit>> hitsHandle = e.getValidHandle<std::vector<recob::Hit>>(fHitLabel);
+  art::ValidHandle<std::vector<recob::Hit>> hitsHandle = e.getValidHandle<std::vector<recob::Hit>>(hitInput);
   //
   size_t size = 0;
   for (auto& v : idsmap)
@@ -134,7 +132,7 @@ void SemanticDecoder::writeToEvent(art::Event& e,
       semtcol->emplace_back(semt);
       const art::Ptr<FeatureVector<5>> fvPtr = fvPtrMaker(semtcol->size()-1);
       const art::Ptr<recob::Hit> hitPtr(hitsHandle, idx);
-      std::cout << "Associating SemanticVector #" << fvPtr.key() << " with hit #" << hitPtr.key() << '\n';
+      if (debug) std::cout << "Associating SemanticVector #" << fvPtr.key() << " with hit #" << hitPtr.key() << '\n';
       outputFeatureHitAssns->addSingle(fvPtr, hitPtr);
     }
   }
