@@ -59,7 +59,7 @@ public:
 
 FilterDecoder::FilterDecoder(const fhicl::ParameterSet& p)
   : DecoderToolBase{p}
-  , hitInput(p.get<art::InputTag>("hitInput", "cluster3DCryoE")) {}
+  , hitInput(p.get<art::InputTag>("hitInput")) {}
 
 void FilterDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>>& idsmap)
 {

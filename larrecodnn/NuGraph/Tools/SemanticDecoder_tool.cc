@@ -63,7 +63,7 @@ private:
 SemanticDecoder::SemanticDecoder(const fhicl::ParameterSet& p)
   : DecoderToolBase(p)
   , categories{p.get<std::vector<std::string>>("categories")}
-  , hitInput{p.get<art::InputTag>("hitInput", "cluster3DCryoE")}
+  , hitInput{p.get<art::InputTag>("hitInput")}
 {}
 
 void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>>& idsmap)
