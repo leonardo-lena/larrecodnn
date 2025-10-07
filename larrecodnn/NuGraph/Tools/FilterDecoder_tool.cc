@@ -69,6 +69,7 @@ void FilterDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>
     size += v.size();
   auto filtcol =
     std::make_unique<vector<FeatureVector<1>>>(size, FeatureVector<1>(std::array<float, 1>({-1.})));
+  // do we need to fill the assns too?
   auto outputFeatureHitAssns = std::make_unique<art::Assns<FeatureVector<1>, recob::Hit>>();
   e.put(std::move(filtcol), instancename);
   e.put(std::move(outputFeatureHitAssns), instancename);
@@ -82,10 +83,15 @@ void FilterDecoder::writeToEvent(art::Event& e,
   //
   art::ValidHandle<std::vector<recob::Hit>> hitsHandle = e.getValidHandle<std::vector<recob::Hit>>(hitInput);
   auto outputFeatureHitAssns = std::make_unique<art::Assns<FeatureVector<1>, recob::Hit>>();
+  std::vector<size_t> sorted_keys;
   size_t size = 0;
-  for (auto& v : idsmap)
+  for (auto& v : idsmap) {
     size += v.size();
-  auto filtcol = std::make_unique<vector<FeatureVector<1>>>();
+    for (auto k : v)
+      sorted_keys.push_back(k);
+  }
+  std::sort(sorted_keys.begin(), sorted_keys.end());
+  auto filtcol = std::make_unique<vector<FeatureVector<1>>>(size, FeatureVector<1>(std::array<float, 1>({-1.})));
   //
   art::PtrMaker<FeatureVector<1>> fvPtrMaker{e, instancename};
 
@@ -116,7 +122,8 @@ void FilterDecoder::writeToEvent(art::Event& e,
     for (int i = 0; i < f.numel(); ++i) {
       size_t idx = idsmap[p][i];
       std::array<float, 1> input({f[i].item<float>()});
-      filtcol->emplace_back(FeatureVector<1>(input));
+      size_t filt_index = std::distance(sorted_keys.begin(), std::find(sorted_keys.begin(), sorted_keys.end(), idx));
+      (*filtcol)[filt_index] = FeatureVector<1>(input);
       const art::Ptr<FeatureVector<1>> fvPtr = fvPtrMaker(filtcol->size()-1);
       const art::Ptr<recob::Hit> hitPtr(hitsHandle, idx);
       if (debug) std::cout << "Associating FilterVector #" << fvPtr.key() << " with hit #" << hitPtr.key() << '\n';

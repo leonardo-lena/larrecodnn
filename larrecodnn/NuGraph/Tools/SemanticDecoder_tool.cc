@@ -69,6 +69,7 @@ SemanticDecoder::SemanticDecoder(const fhicl::ParameterSet& p)
 void SemanticDecoder::writeEmptyToEvent(art::Event& e, const vector<vector<size_t>>& idsmap)
 {
   //
+  // do we need to fill the assns too?
   auto semtdes = std::make_unique<MVADescription<5>>(hitInput.label(), instancename, categories);
   auto outputFeatureHitAssns = std::make_unique<art::Assns<FeatureVector<5>, recob::Hit>>();
   e.put(std::move(semtdes), instancename);
@@ -95,12 +96,17 @@ void SemanticDecoder::writeToEvent(art::Event& e,
   art::PtrMaker<FeatureVector<5>> fvPtrMaker{e, instancename};
   art::ValidHandle<std::vector<recob::Hit>> hitsHandle = e.getValidHandle<std::vector<recob::Hit>>(hitInput);
   //
+  std::vector<size_t> sorted_keys;
   size_t size = 0;
-  for (auto& v : idsmap)
+  for (auto& v : idsmap) {
     size += v.size();
+    for (auto k : v)
+      sorted_keys.push_back(k);
+  }
+  std::sort(sorted_keys.begin(), sorted_keys.end());
   std::array<float, 5> arr;
   std::fill(arr.begin(), arr.end(), -1.);
-  auto semtcol = std::make_unique<vector<FeatureVector<5>>>();
+  auto semtcol = std::make_unique<vector<FeatureVector<5>>>(size, FeatureVector<5>(arr));
 
   size_t n_cols = categories.size();
   for (size_t p = 0; p < planes.size(); p++) {
@@ -129,7 +135,8 @@ void SemanticDecoder::writeToEvent(art::Event& e,
         input[j] = s[i][j].item<float>();
       softmax(input);
       FeatureVector<5> semt = FeatureVector<5>(input);
-      semtcol->emplace_back(semt);
+      size_t filt_index = std::distance(sorted_keys.begin(), std::find(sorted_keys.begin(), sorted_keys.end(), idx));
+      (*semtcol)[filt_index] = semt;
       const art::Ptr<FeatureVector<5>> fvPtr = fvPtrMaker(semtcol->size()-1);
       const art::Ptr<recob::Hit> hitPtr(hitsHandle, idx);
       if (debug) std::cout << "Associating SemanticVector #" << fvPtr.key() << " with hit #" << hitPtr.key() << '\n';

@@ -13,6 +13,7 @@ NuGraphCommon: {
        SemanticDecoderTool: @local::SemanticDecoderTool
    }
 }
+NuGraphCommon.DecoderTools.FilterDecoderTool.hitInput: @local::NuGraphCommon.LoaderTool.hitInput
 NuGraphCommon.DecoderTools.SemanticDecoderTool.hitInput: @local::NuGraphCommon.LoaderTool.hitInput
 
 TritonConfig: {
