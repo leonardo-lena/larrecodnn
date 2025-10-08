@@ -3,6 +3,7 @@ BEGIN_PROLOG
 FilterDecoderTool: {
     instanceName: "filter"
     outputName: "x_filter_"
+    hitInput: @nil
     tool_type: "FilterDecoder"
 }
 
