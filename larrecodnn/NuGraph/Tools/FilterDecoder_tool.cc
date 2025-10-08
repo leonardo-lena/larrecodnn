@@ -124,7 +124,7 @@ void FilterDecoder::writeToEvent(art::Event& e,
       std::array<float, 1> input({f[i].item<float>()});
       size_t filt_index = std::distance(sorted_keys.begin(), std::find(sorted_keys.begin(), sorted_keys.end(), idx));
       (*filtcol)[filt_index] = FeatureVector<1>(input);
-      const art::Ptr<FeatureVector<1>> fvPtr = fvPtrMaker(filtcol->size()-1);
+      const art::Ptr<FeatureVector<1>> fvPtr = fvPtrMaker(filt_index);
       const art::Ptr<recob::Hit> hitPtr(hitsHandle, idx);
       if (debug) std::cout << "Associating FilterVector #" << fvPtr.key() << " with hit #" << hitPtr.key() << '\n';
       outputFeatureHitAssns->addSingle(fvPtr, hitPtr);

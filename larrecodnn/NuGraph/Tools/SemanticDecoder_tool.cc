@@ -137,7 +137,7 @@ void SemanticDecoder::writeToEvent(art::Event& e,
       FeatureVector<5> semt = FeatureVector<5>(input);
       size_t filt_index = std::distance(sorted_keys.begin(), std::find(sorted_keys.begin(), sorted_keys.end(), idx));
       (*semtcol)[filt_index] = semt;
-      const art::Ptr<FeatureVector<5>> fvPtr = fvPtrMaker(semtcol->size()-1);
+      const art::Ptr<FeatureVector<5>> fvPtr = fvPtrMaker(filt_index);
       const art::Ptr<recob::Hit> hitPtr(hitsHandle, idx);
       if (debug) std::cout << "Associating SemanticVector #" << fvPtr.key() << " with hit #" << hitPtr.key() << '\n';
       outputFeatureHitAssns->addSingle(fvPtr, hitPtr);
